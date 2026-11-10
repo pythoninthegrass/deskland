@@ -398,8 +398,10 @@ let lang = 'zh-CN';
 const loadLang = code => I18N[code] ? Promise.resolve() :
   fetch('i18n/' + code + '.json').then(r => r.json()).then(j => { I18N[code] = j; }).catch(() => { I18N[code] = {}; });
 // 一句界面文字：当前语言 → 英文 → 简体中文；{名字} 换成 vars 里的值
+// macOS 上优先用带 Mac 后缀的文字（如 autostartMac）；没有就用通用的
+const IS_MAC = /Mac/.test(navigator.platform);
 function t(key, vars) {
-  const pick = c => I18N[c] && I18N[c].ui && I18N[c].ui[key];
+  const pick = c => I18N[c] && I18N[c].ui && ((IS_MAC && I18N[c].ui[key + 'Mac']) || I18N[c].ui[key]);
   let str = pick(lang) ?? pick('en') ?? pick('zh-CN') ?? key;
   if (vars) str = str.replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? '');
   return str;
@@ -795,6 +797,7 @@ function onHost(m) {
       state.autostartSw = m.autostartSw || '';
       showAutostartWarn();
       showUpdate();
+      shareBusy(shareState);
       showTheme();
       document.documentElement.classList.add('ready');
     });

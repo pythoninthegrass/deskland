@@ -86,7 +86,7 @@ final class HostController: NSObject, NSApplicationDelegate, NSMenuDelegate {
         settingsItem.title = localizer.t("traySettings")
         pauseItem.title = localizer.t("trayPause")
         reloadItem.title = localizer.t("trayReload")
-        autostartItem.title = localizer.t("trayAutostart")
+        autostartItem.title = localizer.t("trayAutostartMac")
         accessibilityItem.title = localizer.t("trayAccessibility")
         exitItem.title = localizer.t("trayExit")
     }
