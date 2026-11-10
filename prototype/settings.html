@@ -38,7 +38,7 @@
   body {
     background: var(--bg); color: var(--text); overflow: hidden;
     font: 13px/1.5 "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei UI", "Microsoft YaHei", system-ui, sans-serif;
-    display: grid; grid-template-rows: auto minmax(0, 1fr) auto; grid-template-columns: minmax(0, 1fr); user-select: none;   /* 顶栏 / 左右两栏 / 底栏 */
+    display: grid; grid-template-rows: auto minmax(0, 1fr) auto; grid-template-columns: minmax(0, 1fr); -webkit-user-select: none; user-select: none;   /* 顶栏 / 左右两栏 / 底栏 */
   }
   h1, h2, h3, p { margin: 0; }
 
@@ -223,12 +223,12 @@
   .help-box { position: relative; width: 520px; max-height: calc(100vh - 48px); overflow-y: auto; }
   .help-article { margin-top: 18px; padding: 16px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); }
   .help-article h4 { margin: 0; font-size: 14px; line-height: 1.5; }
-  .help-article p { margin-top: 8px; color: var(--muted); font-size: 12px; line-height: 1.7; user-select: text; }
-  .help-article ol { margin: 12px 0 0; padding-left: 21px; color: var(--text); font-size: 12px; line-height: 1.7; user-select: text; }
+  .help-article p { margin-top: 8px; color: var(--muted); font-size: 12px; line-height: 1.7; -webkit-user-select: text; user-select: text; }
+  .help-article ol { margin: 12px 0 0; padding-left: 21px; color: var(--text); font-size: 12px; line-height: 1.7; -webkit-user-select: text; user-select: text; }
   .help-article li + li { margin-top: 6px; }
   .feedback-field { display: block; margin-top: 14px; color: var(--muted); font-size: 11px; font-weight: 600; }
   .feedback-input { display: block; width: 100%; margin-top: 6px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 11px;
-    outline: none; background: var(--panel); color: var(--text); font: inherit; font-size: 13px; font-weight: 400; user-select: text; }
+    outline: none; background: var(--panel); color: var(--text); font: inherit; font-size: 13px; font-weight: 400; -webkit-user-select: text; user-select: text; }
   textarea.feedback-input { min-height: 128px; max-height: 280px; resize: vertical; line-height: 1.6; }
   .feedback-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
   .feedback-note { margin-top: 12px; color: var(--faint); font-size: 11px; line-height: 1.6; }
