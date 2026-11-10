@@ -29,6 +29,10 @@ public enum JSONValue: Equatable, Sendable {
     public var stringValue: String? {
         if case let .string(s) = self { s } else { nil }
     }
+
+    public var boolValue: Bool? {
+        if case let .bool(b) = self { b } else { nil }
+    }
 }
 
 public struct JSONError: Error, Equatable {

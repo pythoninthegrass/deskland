@@ -41,4 +41,15 @@ import Testing
     @Test func emptyInput() {
         #expect(IconCoordinates.physicalRects(from: [], display: main2x).isEmpty)
     }
+
+    @Test func iconsGrowToIncludeLabelAfterDisplayTest() {
+        let icons = [Rect(x: 100, y: 100, width: 48, height: 48), Rect(x: 1600, y: 100, width: 48, height: 48)]
+        let r = IconCoordinates.physicalRects(fromIcons: icons, display: main2x)
+        #expect(r == [IconRect(left: 134, top: 200, right: 362, bottom: 368)])
+    }
+
+    @Test func iconNearBottomEdgeKeepsItsLabel() {
+        let r = IconCoordinates.physicalRects(fromIcons: [Rect(x: 100, y: 940, width: 48, height: 48)], display: main2x)
+        #expect(r.count == 1)
+    }
 }

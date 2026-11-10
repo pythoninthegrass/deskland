@@ -28,9 +28,9 @@ public struct DisplayGeometry: Equatable, Sendable {
 public enum IconCoordinates {
     // The page divides by devicePixelRatio, so rects go out in physical pixels relative to the display.
     // An icon belongs to the display holding its center; the rest are dropped.
-    public static func physicalRects(from rects: [Rect], display: DisplayGeometry) -> [IconRect] {
+    public static func physicalRects(from rects: [Rect], display: DisplayGeometry, clipToDisplay: Bool = true) -> [IconRect] {
         rects.compactMap { r in
-            guard display.frame.contains(pointX: r.x + r.width / 2, y: r.y + r.height / 2) else { return nil }
+            guard !clipToDisplay || display.frame.contains(pointX: r.x + r.width / 2, y: r.y + r.height / 2) else { return nil }
             let s = display.scale
             return IconRect(
                 left: Int(((r.x - display.frame.x) * s).rounded()),
@@ -38,5 +38,11 @@ public enum IconCoordinates {
                 right: Int(((r.maxX - display.frame.x) * s).rounded()),
                 bottom: Int(((r.maxY - display.frame.y) * s).rounded()))
         }
+    }
+
+    // Display membership is decided by the icon's center; the sent rect also covers the estimated label.
+    public static func physicalRects(fromIcons icons: [Rect], display: DisplayGeometry) -> [IconRect] {
+        let onDisplay = icons.filter { display.frame.contains(pointX: $0.x + $0.width / 2, y: $0.y + $0.height / 2) }
+        return physicalRects(from: onDisplay.map(IconLabel.bounds(forIcon:)), display: display, clipToDisplay: false)
     }
 }
