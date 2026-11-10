@@ -35,13 +35,15 @@ $NsisCompiler = [IO.Path]::GetFullPath($NsisCompiler)
 $WebView2Bootstrapper = [IO.Path]::GetFullPath($WebView2Bootstrapper)
 
 # A fixed source list prevents other editions or private working files entering this package.
-$sources = @('.gitattributes', '.gitignore', 'AGENTS.md', 'LICENSE', 'NOTICE', 'README.md', 'THIRD_PARTY_NOTICES.md', 'TRADEMARKS.md',
-    'host\DesktopHost.cs', 'host\DesklandPreview.ico', 'host\README.md', 'host\app.manifest', 'host\build.ps1', 'host\inspect.ps1',
-    'tools\build-installer.ps1', 'tools\installer.nsi', 'tools\version.json')
-$themeFiles = @('flat.html', 'meadow.html', 'settings.html', 'thumbs-data.js', 'share.js', 'serve.mjs', 'themes.json', 'beach-palms.js', 'meadow-boy.js', 'meadow-cat.js',
-    'i18n\en.json', 'i18n\zh-CN.json', 'thumbs\beach.webp', 'thumbs\meadow.webp',
-    'assets\beach-coconut-palm-v2.png', 'assets\beach-coconut-palm-curved.png', 'assets\beach-coconut-palm-airy.png', 'assets\beach-coconut-palm-windswept.png', 'assets\beach-coconut-palm-arch.png',
-    'assets\meadow-black-kitten.png', 'assets\meadow-kite-boy-level-face.png', 'assets\meadow-kite-boy-diagonal-run.png')
+$shipList = @(Get-Content -LiteralPath (Join-Path $PSScriptRoot 'ship-files.txt') -Encoding UTF8 |
+    Where-Object { $_.Trim() -and -not $_.StartsWith('#') } |
+    ForEach-Object {
+        $scope, $shipPath = $_.Trim() -split '\s+', 2
+        if (@('source', 'all') -notcontains $scope -or -not $shipPath) { throw 'Invalid ship-files.txt line: ' + $_ }
+        [pscustomobject]@{ Scope = $scope; Path = $shipPath.Replace('/', '\') }
+    })
+$sources = @($shipList.Path)
+$sharedFiles = @($shipList | Where-Object { $_.Scope -eq 'all' } | ForEach-Object { $_.Path })
 $themes = (Get-Content -LiteralPath (Join-Path $root 'prototype\themes.json') -Raw -Encoding UTF8 | ConvertFrom-Json).themes
 $ready = @($themes | Where-Object { $_.status -eq 'ready' })
 $locked = @($themes | Where-Object { $_.locked -eq $true })
@@ -56,10 +58,8 @@ foreach ($theme in $themes) {
     if (-not $match.Success) { throw 'Missing thumbnail URL: ' + $theme.id }
     $thumbName = [uri]::UnescapeDataString($match.Groups[1].Value)
     if ($thumbName -notmatch '^[^\\/]+\.webp$') { throw 'Unexpected thumbnail path: ' + $thumbName }
-    $thumbFile = 'thumbs\' + $thumbName
-    if ($themeFiles -notcontains $thumbFile) { $themeFiles += $thumbFile }
+    if ($sharedFiles -notcontains ('prototype\thumbs\' + $thumbName)) { throw 'Thumbnail missing from ship-files.txt: ' + $thumbName }
 }
-$sources += $themeFiles | ForEach-Object { 'prototype\' + $_ }
 $sourceStage = Join-Path $payload 'source-stage'
 foreach ($file in $sources) {
     $target = Join-Path $sourceStage $file
@@ -70,7 +70,7 @@ Add-Type -AssemblyName System.IO.Compression.FileSystem
 [IO.Compression.ZipFile]::CreateFromDirectory($sourceStage, (Join-Path $payload 'Deskland-source.zip'))
 # Only program data is installed. The accompanying ZIP contains the exact corresponding source.
 $runtimeFiles = @('host\bin\Deskland.exe', 'host\bin\DesklandPreview.ico', 'host\bin\Microsoft.Web.WebView2.Core.dll', 'host\bin\Microsoft.Web.WebView2.WinForms.dll', 'host\bin\WebView2Loader.dll')
-$installFiles = @('LICENSE', 'NOTICE', 'README.md', 'THIRD_PARTY_NOTICES.md', 'TRADEMARKS.md') + @($themeFiles | Where-Object { $_ -ne 'serve.mjs' } | ForEach-Object { 'prototype\' + $_ }) + $runtimeFiles
+$installFiles = $sharedFiles + $runtimeFiles
 foreach ($file in $installFiles) {
     $target = Join-Path $payload $file
     New-Item -ItemType Directory -Force (Split-Path $target) | Out-Null

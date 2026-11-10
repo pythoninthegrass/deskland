@@ -1,0 +1,57 @@
+# Files the Windows installer and the macOS DMG are built from, read by tools/build-installer.ps1 and macos/build.sh.
+# Format: <scope> <repo-relative path with forward slashes>
+#   source  only in the corresponding-source ZIP
+#   all     in the source ZIP and in the installed app on both platforms
+# Windows runtime binaries are listed in build-installer.ps1; every theme thumbnail listed in prototype/themes.json must appear here.
+source .gitattributes
+source .gitignore
+source AGENTS.md
+all LICENSE
+all NOTICE
+all README.md
+all THIRD_PARTY_NOTICES.md
+all TRADEMARKS.md
+source host/DesktopHost.cs
+source host/Themes.cs
+source host/DesklandPreview.ico
+source host/README.md
+source host/app.manifest
+source host/build.ps1
+source host/inspect.ps1
+source tools/build-installer.ps1
+source tools/installer.nsi
+source tools/ship-files.txt
+source tools/version.json
+source prototype/serve.mjs
+all prototype/flat.html
+all prototype/meadow.html
+all prototype/settings.html
+all prototype/thumbs-data.js
+all prototype/share.js
+all prototype/themes.json
+all prototype/beach-palms.js
+all prototype/meadow-boy.js
+all prototype/meadow-cat.js
+all prototype/i18n/en.json
+all prototype/i18n/zh-CN.json
+all prototype/assets/beach-coconut-palm-airy.png
+all prototype/assets/beach-coconut-palm-arch.png
+all prototype/assets/beach-coconut-palm-curved.png
+all prototype/assets/beach-coconut-palm-v2.png
+all prototype/assets/beach-coconut-palm-windswept.png
+all prototype/assets/meadow-black-kitten.png
+all prototype/assets/meadow-kite-boy-diagonal-run.png
+all prototype/assets/meadow-kite-boy-level-face.png
+all prototype/thumbs/beach.webp
+all prototype/thumbs/colorful city.webp
+all prototype/thumbs/forest.webp
+all prototype/thumbs/hand draw city.webp
+all prototype/thumbs/lake.webp
+all prototype/thumbs/lotus.webp
+all prototype/thumbs/maldives.webp
+all prototype/thumbs/meadow.webp
+all prototype/thumbs/nautical chart.webp
+all prototype/thumbs/ocean.webp
+all prototype/thumbs/old map.webp
+all prototype/thumbs/pink forest.webp
+all prototype/thumbs/sky.webp

@@ -1,0 +1,161 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+
+version: "3.0"
+
+vars:
+  APP_NAME: "Deskland Preview"
+  EXECUTABLE: DesklandMac
+  STAGE: macos/.build/stage
+  APP: '{{.STAGE}}/{{.APP_NAME}}.app'
+  DIST: macos/dist
+  VERSION:
+    sh: jq -r .version tools/version.json
+  DMG: '{{.DIST}}/Deskland-Preview-{{.VERSION}}-macos-universal.dmg'
+  # Paths from tools/ship-files.txt, shared with tools/build-installer.ps1: scope "all" ships in the app, "source" only in the source ZIP.
+  SHIP_ALL:
+    sh: awk '/^#/ || NF == 0 { next } $1 == "all" { sub(/^all[ \t]+/, ""); sub(/[ \t]+$/, ""); print }' tools/ship-files.txt
+
+tasks:
+  test:
+    desc: "Run the Swift tests"
+    dir: macos
+    cmds:
+      - swift test
+
+  build:
+    desc: "Build, sign, notarize and staple the universal DMG (credentials: macos/.env.example)"
+    cmds:
+      - task: app
+      - task: sign
+      - task: dmg
+      - task: notarize
+      - task: sidecars
+
+  themes:
+    desc: "Check the theme catalog is two usable themes plus eleven locked cards, all thumbnails shipped"
+    cmds:
+      - |-
+        jq -e '(.themes | length) == 13
+          and ([.themes[] | select(.status == "ready") | .id] | sort) == ["beach", "meadow"]
+          and ([.themes[] | select(.locked == true)] | length) == 11
+          and all(.themes[] | select(.locked == true); (.page | not) and (.groups | not))' \
+          prototype/themes.json >/dev/null \
+          || { echo "error: expected two usable themes and eleven locked preview cards without page source" >&2; exit 1; }
+        jq -r '.themes[].thumb | capture("url\\(thumbs/(?<n>[^)?]+)").n' prototype/themes.json | while IFS= read -r name; do
+          name="$(printf '%s' "$name" | sed 's/%20/ /g')"
+          printf '%s\n' "{{.SHIP_ALL}}" | grep -Fxq "prototype/thumbs/$name" \
+            || { echo "error: thumbnail missing from tools/ship-files.txt: $name" >&2; exit 1; }
+        done
+
+  binary:
+    desc: "Build the universal (arm64 + x86_64) release binary"
+    dir: macos
+    cmds:
+      - swift build -c release --arch arm64 --arch x86_64
+      - |-
+        archs=" $(lipo -archs "$(swift build -c release --arch arm64 --arch x86_64 --show-bin-path)/{{.EXECUTABLE}}") "
+        case "$archs" in *" arm64 "*) ;; *) echo "error: binary is not universal:$archs" >&2; exit 1 ;; esac
+        case "$archs" in *" x86_64 "*) ;; *) echo "error: binary is not universal:$archs" >&2; exit 1 ;; esac
+
+  app:
+    desc: "Assemble Deskland Preview.app with the shipped files as resources"
+    deps: [themes, binary]
+    cmds:
+      - |-
+        case "{{.VERSION}}" in
+          *[!0-9.]* | "" | .* | *. | *..*) echo "error: invalid package version: {{.VERSION}}" >&2; exit 1 ;;
+        esac
+        app="{{.APP}}"
+        rm -rf "{{.STAGE}}"
+        mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
+        bin="$(cd macos && swift build -c release --arch arm64 --arch x86_64 --show-bin-path)"
+        cp "$bin/{{.EXECUTABLE}}" "$app/Contents/MacOS/{{.EXECUTABLE}}"
+        plist="$app/Contents/Info.plist"
+        cp macos/Sources/DesklandMac/Info.plist "$plist"
+        /usr/libexec/PlistBuddy \
+          -c "Add :CFBundleExecutable string {{.EXECUTABLE}}" \
+          -c "Add :CFBundlePackageType string APPL" \
+          -c "Add :CFBundleShortVersionString string {{.VERSION}}" \
+          -c "Add :CFBundleVersion string {{.VERSION}}" \
+          -c "Add :NSPrincipalClass string NSApplication" \
+          -c "Add :NSHighResolutionCapable bool true" "$plist"
+        [ "$(/usr/libexec/PlistBuddy -c "Print :LSUIElement" "$plist")" = true ] \
+          || { echo "error: LSUIElement is not set" >&2; exit 1; }
+        [ "$(/usr/libexec/PlistBuddy -c "Print :LSMinimumSystemVersion" "$plist")" = 15.0 ] \
+          || { echo "error: LSMinimumSystemVersion is not 15.0" >&2; exit 1; }
+        printf '%s\n' "{{.SHIP_ALL}}" | while IFS= read -r path; do
+          mkdir -p "$app/Contents/Resources/$(dirname "$path")"
+          cp "$path" "$app/Contents/Resources/$path"
+        done
+
+  sign:
+    desc: "Sign the app with the hardened runtime (ad-hoc when APPLE_SIGNING_IDENTITY is unset; not sandboxed)"
+    cmds:
+      - |-
+        if [ -n "${APPLE_SIGNING_IDENTITY:-}" ]; then
+          codesign --force --timestamp --options runtime --sign "$APPLE_SIGNING_IDENTITY" "{{.APP}}"
+        else
+          echo "warning: APPLE_SIGNING_IDENTITY is not set; signing ad-hoc, the result cannot be notarized or distributed" >&2
+          codesign --force --options runtime --sign - "{{.APP}}"
+        fi
+        codesign --verify --strict --verbose=2 "{{.APP}}"
+
+  dmg:
+    desc: "Create the DMG from the app and sign it"
+    cmds:
+      - |-
+        dmg_stage=macos/.build/dmg
+        rm -rf "$dmg_stage" "{{.DMG}}"
+        mkdir -p "$dmg_stage" "{{.DIST}}"
+        cp -R "{{.APP}}" "$dmg_stage/"
+        ln -s /Applications "$dmg_stage/Applications"
+        hdiutil create -volname "{{.APP_NAME}}" -srcfolder "$dmg_stage" -ov -format UDZO "{{.DMG}}" >/dev/null
+        rm -rf "$dmg_stage"
+        if [ -n "${APPLE_SIGNING_IDENTITY:-}" ]; then
+          codesign --force --timestamp --sign "$APPLE_SIGNING_IDENTITY" "{{.DMG}}"
+        else
+          codesign --force --sign - "{{.DMG}}"
+        fi
+
+  notarize:
+    desc: "Notarize and staple the DMG with NOTARY_PROFILE, else APPLE_API_KEY, APPLE_API_ISSUER and APPLE_API_KEY_B64"
+    cmds:
+      - |-
+        if [ -z "${APPLE_SIGNING_IDENTITY:-}" ]; then
+          echo "skipping notarization: no signing identity"; exit 0
+        fi
+        if [ -n "${NOTARY_PROFILE:-}" ]; then
+          auth=(--keychain-profile "$NOTARY_PROFILE")
+        elif [ -n "${APPLE_API_KEY:-}" ] && [ -n "${APPLE_API_ISSUER:-}" ] && [ -n "${APPLE_API_KEY_B64:-}" ]; then
+          key="$(mktemp "${TMPDIR:-/tmp}/deskland-notary.XXXXXX")"
+          trap 'rm -f "$key"' EXIT
+          chmod 600 "$key"
+          printf '%s' "$APPLE_API_KEY_B64" | base64 -D >"$key"
+          auth=(--key "$key" --key-id "$APPLE_API_KEY" --issuer "$APPLE_API_ISSUER")
+        else
+          echo "skipping notarization: set NOTARY_PROFILE, or APPLE_API_KEY, APPLE_API_ISSUER and APPLE_API_KEY_B64"; exit 0
+        fi
+        echo "Notarizing {{.DMG}}"
+        result="$(xcrun notarytool submit "{{.DMG}}" "${auth[@]}" --wait --output-format json)" \
+          || { echo "$result" >&2; echo "error: notarytool submit failed" >&2; exit 1; }
+        status="$(printf '%s' "$result" | jq -r .status)"
+        id="$(printf '%s' "$result" | jq -r .id)"
+        if [ "$status" != Accepted ]; then
+          xcrun notarytool log "$id" "${auth[@]}" >&2 || true
+          echo "error: notarization $status (submission $id)" >&2; exit 1
+        fi
+        xcrun stapler staple "{{.DMG}}"
+        xcrun stapler validate "{{.DMG}}"
+        spctl -a -t open --context context:primary-signature -vv "{{.DMG}}"
+
+  sidecars:
+    desc: "Write the DMG's SHA256 and file manifest next to it"
+    cmds:
+      - |-
+        hash="$(shasum -a 256 "{{.DMG}}" | cut -d' ' -f1)"
+        printf '%s  %s\n' "$hash" "$(basename "{{.DMG}}")" >"{{.DMG}}.sha256"
+        printf '%s\n' "{{.SHIP_ALL}}" | while IFS= read -r path; do
+          jq -n --arg path "$path" --arg sha256 "$(shasum -a 256 "{{.APP}}/Contents/Resources/$path" | cut -d' ' -f1)" '{path: $path, sha256: $sha256}'
+        done | jq -s . >"{{.DMG}}.manifest.json"
+        echo "DMG: {{.DMG}}"
+        echo "SHA256: $hash"

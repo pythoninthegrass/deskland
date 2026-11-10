@@ -1,0 +1,18 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+
+version: "3.0"
+
+set: ["e", "u", "pipefail"]
+
+dotenv: ["macos/.env"]
+
+includes:
+  macos:
+    taskfile: taskfiles/macos.yml
+    platforms: [darwin]
+
+tasks:
+  default:
+    desc: "List available tasks"
+    cmds:
+      - task --list
