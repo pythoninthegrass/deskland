@@ -96,4 +96,3 @@ Or remove the quarantine flag from a downloaded copy: `xattr -dr com.apple.quara
 
 - **Stage Manager is untested and unsupported.** How the desktop-level window and icon tracking behave with it enabled is unknown.
 - Main display only.
-- The Accessibility grant without relaunch and launch at login have not yet been verified from a built app bundle; TASK-004.01 tracks both.
