@@ -91,6 +91,7 @@ Or remove the quarantine flag from a downloaded copy: `xattr -dr com.apple.quara
 - Settings and logs are stored in `~/Library/Application Support/DesklandPreview`, with `host.log` and `settings.json` there. Shared images and videos go to `~/Pictures/Deskland Preview`.
 - Set `DESKLAND_PROFILE_DIR` to an absolute path to isolate settings, caches and the single-instance lock. Set `DESKLAND_PAGE_DIR` to serve theme pages from another directory.
 - Changes to theme pages need the menu's Reload; Swift changes need a rebuild.
+- Cmd-Shift-4 then Space captures the wallpaper as its own window, so the shot has no Dock, menu bar or desktop icons. This is how macOS treats a desktop-level window, not a Deskland bug; Cmd-Shift-3 captures the composited screen.
 - English and Simplified Chinese only. There is no sign-in, purchase restore or update check.
 
 ## Known limitations
