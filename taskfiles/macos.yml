@@ -23,7 +23,7 @@ tasks:
       - swift test
 
   build:
-    desc: "Build, sign, notarize and staple the universal DMG (credentials: macos/.env.example)"
+    desc: "Build, sign, notarize and staple the universal DMG (credentials: .env.example)"
     cmds:
       - task: app
       - task: sign
