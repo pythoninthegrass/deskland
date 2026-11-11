@@ -31,6 +31,23 @@ tasks:
       - task: notarize
       - task: sidecars
 
+  icon:
+    desc: "Regenerate macos/Resources/AppIcon.icns from host/DesklandPreview.ico (frames up to 256px, nothing upscaled)"
+    cmds:
+      - |-
+        set=macos/.build/AppIcon.iconset
+        rm -rf "$set"; mkdir -p "$set" macos/Resources
+        frame() { magick "host/DesklandPreview.ico[$1]" "$set/$2.png"; }
+        frame 0 icon_16x16
+        frame 2 icon_16x16@2x
+        cp "$set/icon_16x16@2x.png" "$set/icon_32x32.png"
+        frame 4 icon_32x32@2x
+        frame 5 icon_128x128
+        frame 6 icon_128x128@2x
+        cp "$set/icon_128x128@2x.png" "$set/icon_256x256.png"
+        iconutil -c icns "$set" -o macos/Resources/AppIcon.icns
+        rm -rf "$set"
+
   themes:
     desc: "Check the theme catalog is two usable themes plus eleven locked cards, all thumbnails shipped"
     cmds:
@@ -75,6 +92,7 @@ tasks:
         /usr/libexec/PlistBuddy \
           -c "Add :CFBundleExecutable string {{.EXECUTABLE}}" \
           -c "Add :CFBundlePackageType string APPL" \
+          -c "Add :CFBundleIconFile string AppIcon" \
           -c "Add :CFBundleShortVersionString string {{.VERSION}}" \
           -c "Add :CFBundleVersion string {{.VERSION}}" \
           -c "Add :NSPrincipalClass string NSApplication" \
@@ -83,6 +101,7 @@ tasks:
           || { echo "error: LSUIElement is not set" >&2; exit 1; }
         [ "$(/usr/libexec/PlistBuddy -c "Print :LSMinimumSystemVersion" "$plist")" = 15.0 ] \
           || { echo "error: LSMinimumSystemVersion is not 15.0" >&2; exit 1; }
+        cp macos/Resources/AppIcon.icns "$app/Contents/Resources/AppIcon.icns"
         printf '%s\n' "{{.SHIP_ALL}}" | while IFS= read -r path; do
           mkdir -p "$app/Contents/Resources/$(dirname "$path")"
           cp "$path" "$app/Contents/Resources/$path"
