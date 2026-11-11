@@ -68,7 +68,7 @@ tasks:
     desc: "Build the universal (arm64 + x86_64) release binary"
     dir: macos
     cmds:
-      - swift build -c release --arch arm64 --arch x86_64
+      - swift build -q -c release --arch arm64 --arch x86_64
       - |-
         archs=" $(lipo -archs "$(swift build -c release --arch arm64 --arch x86_64 --show-bin-path)/{{.EXECUTABLE}}") "
         case "$archs" in *" arm64 "*) ;; *) echo "error: binary is not universal:$archs" >&2; exit 1 ;; esac
@@ -163,8 +163,9 @@ tasks:
           xcrun notarytool log "$id" "${auth[@]}" >&2 || true
           echo "error: notarization $status (submission $id)" >&2; exit 1
         fi
-        xcrun stapler staple "{{.DMG}}"
-        xcrun stapler validate "{{.DMG}}"
+        for action in staple validate; do
+          out="$(xcrun stapler "$action" "{{.DMG}}" 2>&1)" || { echo "$out" >&2; echo "error: stapler $action failed" >&2; exit 1; }
+        done
         spctl -a -t open --context context:primary-signature -vv "{{.DMG}}"
 
   sidecars:

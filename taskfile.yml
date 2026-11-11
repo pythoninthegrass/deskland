@@ -6,6 +6,8 @@ set: ["e", "u", "pipefail"]
 
 dotenv: [".env"]
 
+silent: true
+
 includes:
   macos:
     taskfile: taskfiles/macos.yml
