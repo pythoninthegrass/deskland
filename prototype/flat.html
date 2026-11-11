@@ -152,7 +152,8 @@
 /* ======================================================================
    参数
    ====================================================================== */
-const CELL_W = 76, CELL_H = 100, GRID_X0 = 4, GRID_Y0 = 6, TASKBAR = 48;
+const CELL_W = 76, CELL_H = 100, GRID_X0 = 4, GRID_Y0 = 6;
+let TASKBAR = 48;           // 底部保留条（CSS 像素）；Windows 固定 48，macOS 宿主用 inset 消息按程序坞调整
 const STEP = 5;
 const MORPH_MS = 1800;
 
@@ -1255,6 +1256,11 @@ function startHostedMode() {
     if (m.t === 'pause') { paused = PREVIEW ? false : m.v; settlePaused(); return; }
     if (m.t === 'settings') { applySettings(m.v || {}); return; }
     if (m.t === 'reset') { applySettings(Object.assign({}, DEFAULTS, m.v || {})); return; }
+    if (m.t === 'inset') {                        // 可选：宿主给出底部保留条（物理像素）
+      TASKBAR = Math.max(0, (m.b || 0) / (window.devicePixelRatio || 1));
+      if (iconsSeen) commit(false);
+      return;
+    }
     if (m.t !== 'icons') return;
     const k = window.devicePixelRatio || 1;       // 物理像素 → CSS 像素
     icons = m.vis ? m.r.map(([l, t, r, b]) => ({ x: l / k, y: t / k, w: (r - l) / k, h: (b - t) / k })) : [];

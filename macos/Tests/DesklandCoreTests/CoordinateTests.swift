@@ -53,3 +53,30 @@ import Testing
         #expect(r.count == 1)
     }
 }
+
+// Frames are AppKit-style: global points, bottom-left origin.
+@Suite struct DockInsetTests {
+    private let frame = Rect(x: 0, y: 0, width: 1440, height: 900)
+
+    @Test func dockAtBottomScalesToPhysicalPixels() {
+        let visible = Rect(x: 0, y: 70, width: 1440, height: 800)
+        #expect(DockInset.bottomPixels(frame: frame, visible: visible, scale: 2) == 140)
+        #expect(DockInset.bottomPixels(frame: frame, visible: visible, scale: 1) == 70)
+    }
+
+    @Test func dockOnSideOrHiddenLeavesNoBottomStrip() {
+        let left = Rect(x: 80, y: 0, width: 1360, height: 875)
+        #expect(DockInset.bottomPixels(frame: frame, visible: left, scale: 2) == 0)
+    }
+
+    @Test func menuBarAloneDoesNotCount() {
+        let visible = Rect(x: 0, y: 0, width: 1440, height: 876)
+        #expect(DockInset.bottomPixels(frame: frame, visible: visible, scale: 2) == 0)
+    }
+
+    @Test func offsetDisplayOriginIsRelative() {
+        let f = Rect(x: 0, y: -100, width: 1440, height: 900)
+        let visible = Rect(x: 0, y: -30, width: 1440, height: 830)
+        #expect(DockInset.bottomPixels(frame: f, visible: visible, scale: 2) == 140)
+    }
+}

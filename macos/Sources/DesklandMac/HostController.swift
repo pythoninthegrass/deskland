@@ -161,7 +161,7 @@ final class HostController: NSObject, NSApplicationDelegate, NSMenuDelegate {
         on(dc, Notification.Name("com.apple.screenIsUnlocked")) { $0.wallpaper?.screenLocked = false }
         on(ws, NSWorkspace.activeSpaceDidChangeNotification) { $0.wallpaper?.pollPause() }
         on(ws, NSWorkspace.didActivateApplicationNotification) { $0.wallpaper?.pollPause() }
-        on(.default, NSApplication.didChangeScreenParametersNotification) { $0.wallpaper?.updateFrame() }
+        on(.default, NSApplication.didChangeScreenParametersNotification) { $0.wallpaper?.updateFrame(); $0.wallpaper?.pollInset() }
     }
 
     // MARK: wallpaper

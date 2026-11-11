@@ -70,4 +70,9 @@ import Testing
     @Test func parseUnicodeEscapes() throws {
         #expect(try JSONValue.parse(#""云""#) == .string("云"))
     }
+
+    @Test func inset() {
+        #expect(HostMessage.inset(bottom: 96).wireString == #"{"t":"inset","b":96}"#)
+        #expect(HostMessage.inset(bottom: 0).wireString == #"{"t":"inset","b":0}"#)
+    }
 }

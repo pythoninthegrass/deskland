@@ -8,6 +8,7 @@ public struct IconRect: Equatable, Sendable {
 
 public enum HostMessage: Equatable {
     case icons(visible: Bool, rects: [IconRect])
+    case inset(bottom: Int)
     case pause(Bool)
     case settings(JSONValue)
     case reset
@@ -19,6 +20,7 @@ public enum HostMessage: Equatable {
         case let .icons(visible, rects):
             let r = rects.map { "[\($0.left),\($0.top),\($0.right),\($0.bottom)]" }.joined(separator: ",")
             return "{\"t\":\"icons\",\"vis\":\(visible),\"r\":[\(r)]}"
+        case let .inset(b): return "{\"t\":\"inset\",\"b\":\(b)}"
         case let .pause(v): return "{\"t\":\"pause\",\"v\":\(v)}"
         case let .settings(v): return "{\"t\":\"settings\",\"v\":\(v.serialized)}"
         case .reset: return "{\"t\":\"reset\"}"

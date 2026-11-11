@@ -13,6 +13,7 @@ final class WallpaperController: NSObject, WKNavigationDelegate {
     private var pauseTimer: Timer?
     private var iconGate = ChangeGate<String>()
     private var pauseGate = ChangeGate<Bool>()
+    private var insetGate = ChangeGate<Int>()
     private var page: String
     private var ready = false
     private var wasTrusted = IconReader.isTrusted
@@ -53,7 +54,7 @@ final class WallpaperController: NSObject, WKNavigationDelegate {
         window.orderFrontRegardless()
         load()
         iconTimer = Timer.scheduledTimer(withTimeInterval: 0.4, repeats: true) { [weak self] _ in
-            MainActor.assumeIsolated { self?.pollIcons() }
+            MainActor.assumeIsolated { self?.pollInset(); self?.pollIcons() }
         }
         pauseTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated { self?.pollPause() }
@@ -91,8 +92,10 @@ final class WallpaperController: NSObject, WKNavigationDelegate {
         case .record, .recordError, .recordBadData: onRecord(PageMessage.parse(msg))
         case let .recordProgress(p): onRecordProgress(p)
         case .ready, .unknown:
-            // The page is up: settings first (shoreline depends on them), then icons and pause state.
+            // The page is up: inset and settings first (shoreline depends on them), then icons and pause state.
             ready = true
+            insetGate.reset()
+            pollInset()
             post(settingsMessage())
             iconGate.reset(); pauseGate.reset()
             pollIcons(); pollPause()
@@ -106,6 +109,20 @@ final class WallpaperController: NSObject, WKNavigationDelegate {
     func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
         Log.write("壁纸页面进程退出，重新载入")
         load()
+    }
+
+    // MARK: dock inset
+
+    func pollInset() {
+        guard ready else { return }
+        let f = screen.frame, v = screen.visibleFrame
+        let bottom = DockInset.bottomPixels(
+            frame: Rect(x: f.minX, y: f.minY, width: f.width, height: f.height),
+            visible: Rect(x: v.minX, y: v.minY, width: v.width, height: v.height),
+            scale: screen.backingScaleFactor)
+        guard insetGate.shouldSend(bottom) else { return }
+        post(HostMessage.inset(bottom: bottom).wireString)
+        Log.write("程序坞下边距：\(bottom)")
     }
 
     // MARK: icons

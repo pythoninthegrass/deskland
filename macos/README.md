@@ -87,6 +87,7 @@ Or remove the quarantine flag from a downloaded copy: `xattr -dr com.apple.quara
 - The status item is a leaf icon with Settings, Pause animation, Reload, Start at login, Grant Accessibility access and Exit. Ctrl+Option+H opens the menu at the pointer.
 - The app has no Dock icon. Launched at login it starts in the background without opening Settings; launched by hand it opens Settings.
 - The wallpaper pauses for a fullscreen or maximized frontmost window, a fullscreen Space, display sleep or a locked screen, and resumes when they end. It can also be paused from the menu.
+- The bottom reserved strip (48 px on Windows for the taskbar) is set by the host: it sends an optional `{"t":"inset","b":<physical px>}` message before settings on page ready and again when the Dock size, edge or auto-hide changes. A Dock on the left or right edge, or a hidden Dock, gives 0. Pages keep 48 when no message arrives, so the Windows host and the standalone browser preview are unchanged.
 - Settings and logs are stored in `~/Library/Application Support/DesklandPreview`, with `host.log` and `settings.json` there. Shared images and videos go to `~/Pictures/Deskland Preview`.
 - Set `DESKLAND_PROFILE_DIR` to an absolute path to isolate settings, caches and the single-instance lock. Set `DESKLAND_PAGE_DIR` to serve theme pages from another directory.
 - Changes to theme pages need the menu's Reload; Swift changes need a rebuild.

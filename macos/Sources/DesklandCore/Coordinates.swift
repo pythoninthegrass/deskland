@@ -46,3 +46,11 @@ public enum IconCoordinates {
         return physicalRects(from: onDisplay.map(IconLabel.bounds(forIcon:)), display: display, clipToDisplay: false)
     }
 }
+
+// The page reserves only a bottom strip, so a Dock on the side or a hidden Dock yields 0.
+public enum DockInset {
+    // Frames are AppKit-style (bottom-left origin); the result is in physical pixels.
+    public static func bottomPixels(frame: Rect, visible: Rect, scale: Double) -> Int {
+        max(0, Int(((visible.y - frame.y) * scale).rounded()))
+    }
+}
