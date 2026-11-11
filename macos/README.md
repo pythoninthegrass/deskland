@@ -63,9 +63,9 @@ spctl -a -t open --context context:primary-signature -vv macos/dist/*.dmg
 
 Deskland needs one permission, **Accessibility**, to read desktop icon positions from Finder.
 
-1. On first launch the system prompt appears once. A marker file, `accessibility.prompted`, in the data directory stops it from appearing again.
-2. Until access is granted the wallpaper runs without icon adaptation.
-3. Grant it in System Settings → Privacy & Security → Accessibility. The app picks it up without a relaunch.
+1. On first launch the system prompt appears once; choose **Allow**. A marker file, `accessibility.prompted`, in the data directory stops it from appearing again.
+2. Until access is granted the wallpaper runs without icon adaptation. The app picks the grant up without a relaunch.
+3. To grant or revoke it later, use the toggle for Deskland Preview in System Settings → Privacy & Security → Accessibility.
 4. The status menu entry **Grant Accessibility access…** opens that pane and shows a check mark once access is granted.
 
 To start over, run `tccutil reset Accessibility app.deskland.preview` and delete `accessibility.prompted`.
