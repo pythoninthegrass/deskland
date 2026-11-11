@@ -12,7 +12,11 @@
 - 浏览器预览：`node prototype\serve.mjs`，访问 `http://localhost:5178/settings.html`。
 - Windows 宿主：`host/DesktopHost.cs`；改主题 HTML/JS 不需要重新编译宿主，托盘“重新载入”即可。
 - 产品显示名为 `Deskland Preview`；程序读写 `%LOCALAPPDATA%\DesklandPreview`，安装到 `Programs\Deskland Preview`，启动项和运行实例标识也与开发版分开，不要改回共用身份。
-- 不提交 `host/bin/`、`host/lib/`、个人数据、凭证或本机路径。
+- macOS 宿主：`macos/`（Swift 包，AppKit 加 WKWebView），要求 macOS 15 及以上，仅主显示器，通过“辅助功能”读取桌面图标位置；构建与签名说明见 `macos/README.md`。Stage Manager 未经测试，不受支持。
+- macOS 构建：`task macos:build` 生成通用（arm64 与 x86_64）DMG，完成签名、公证和装订，产物在 `macos/dist/`；`task macos:test` 运行 Swift 测试。凭据从仓库根目录 `.env` 读取（模板见 `.env.example`），未设置 `APPLE_SIGNING_IDENTITY` 时只做临时签名并跳过公证；输入未变时不重复构建，`-f` 强制重建。
+- Windows 安装包与 macOS 应用共用 `tools/ship-files.txt` 作为随附文件清单；增删随附文件只改这一处，`ShipFilesTests` 会检查文件存在、缩略图齐全且只包含免费主题页面。
+- macOS 的产品标识为 `app.deskland.preview`，数据在 `~/Library/Application Support/DesklandPreview`，分享文件在 `~/Pictures/Deskland Preview`；改主题 HTML/JS 用状态栏菜单“重新载入”，登录项启动时只在后台运行，不弹设置。
+- 不提交 `host/bin/`、`host/lib/`、`macos/.build/`、`macos/dist/`、`.env`、个人数据、凭证或本机路径。
 - 发布或修改商标相关内容前须获得项目负责人的明确指示。
 - 许可见 `LICENSE`，名称和图标的说明见 `TRADEMARKS.md`。
 - 2026-11-06：已发布 GitHub Release `v0.1.2`，包含 Windows x64 安装包、对应源码 ZIP、SHA256 和文件清单；README 提供最新 Release 下载入口。仓库已公开，安装包未签名。
