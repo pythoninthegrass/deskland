@@ -173,7 +173,7 @@ tasks:
       - |-
         hash="$(shasum -a 256 "{{.DMG}}" | cut -d' ' -f1)"
         printf '%s  %s\n' "$hash" "$(basename "{{.DMG}}")" >"{{.DMG}}.sha256"
-        printf '%s\n' "{{.SHIP_ALL}}" | while IFS= read -r path; do
+        { echo AppIcon.icns; printf '%s\n' "{{.SHIP_ALL}}"; } | while IFS= read -r path; do
           jq -n --arg path "$path" --arg sha256 "$(shasum -a 256 "{{.APP}}/Contents/Resources/$path" | cut -d' ' -f1)" '{path: $path, sha256: $sha256}'
         done | jq -s . >"{{.DMG}}.manifest.json"
         echo "DMG: {{.DMG}}"
