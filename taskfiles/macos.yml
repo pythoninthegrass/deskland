@@ -11,6 +11,15 @@ vars:
   VERSION:
     sh: jq -r .version tools/version.json
   DMG: '{{.DIST}}/Deskland-Preview-{{.VERSION}}-macos-universal.dmg'
+  # Hash of everything that decides the DMG's bytes and signing mode; build is skipped while it matches the stored one.
+  FINGERPRINT:
+    sh: |-
+      {
+        find macos/Sources macos/Resources macos/Package.swift -type f | sort | xargs shasum -a 256
+        awk '/^#/ || NF == 0 { next } $1 == "all" { sub(/^all[ \t]+/, ""); sub(/[ \t]+$/, ""); print }' tools/ship-files.txt | while IFS= read -r path; do shasum -a 256 "$path"; done
+        shasum -a 256 tools/ship-files.txt tools/version.json taskfiles/macos.yml
+        echo "identity=${APPLE_SIGNING_IDENTITY:-} profile=${NOTARY_PROFILE:+set} key=${APPLE_API_KEY_B64:+set}"
+      } | shasum -a 256 | cut -d' ' -f1
   # Paths from tools/ship-files.txt, shared with tools/build-installer.ps1: scope "all" ships in the app, "source" only in the source ZIP.
   SHIP_ALL:
     sh: awk '/^#/ || NF == 0 { next } $1 == "all" { sub(/^all[ \t]+/, ""); sub(/[ \t]+$/, ""); print }' tools/ship-files.txt
@@ -23,13 +32,17 @@ tasks:
       - swift test
 
   build:
-    desc: "Build, sign, notarize and staple the universal DMG (credentials: .env.example)"
+    desc: "Build, sign, notarize and staple the universal DMG unless its inputs are unchanged, which prints nothing (-f forces)"
+    status:
+      - test -f "{{.DMG}}"
+      - test "$(cat "{{.DMG}}.fingerprint" 2>/dev/null)" = "{{.FINGERPRINT}}"
     cmds:
       - task: app
       - task: sign
       - task: dmg
       - task: notarize
       - task: sidecars
+      - echo "{{.FINGERPRINT}}" >"{{.DMG}}.fingerprint"
 
   icon:
     desc: "Regenerate macos/Resources/AppIcon.icns from host/DesklandPreview.ico (frames up to 256px, nothing upscaled)"
