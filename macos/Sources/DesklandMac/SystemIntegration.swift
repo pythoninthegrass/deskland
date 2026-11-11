@@ -37,6 +37,12 @@ final class Hotkey {
 enum Autostart {
     static var isEnabled: Bool { SMAppService.mainApp.status == .enabled }
 
+    // SMAppService.mainApp cannot pass --autostart, so a login item is recognised by the open-application event's 'lgit' marker.
+    static func launchedAsLoginItem() -> Bool {
+        guard let event = NSAppleEventManager.shared().currentAppleEvent, event.eventID == AEEventID(kAEOpenApplication) else { return false }
+        return event.paramDescriptor(forKeyword: AEKeyword(keyAEPropData))?.enumCodeValue == OSType(keyAELaunchedAsLogInItem)
+    }
+
     // Needs a real app bundle; a bare `swift run` binary fails and the failure is logged.
     static func set(_ on: Bool) {
         do {

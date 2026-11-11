@@ -85,7 +85,7 @@ Or remove the quarantine flag from a downloaded copy: `xattr -dr com.apple.quara
 ## Behavior and data
 
 - The status item is a leaf icon with Settings, Pause animation, Reload, Start at login, Grant Accessibility access and Exit. Ctrl+Option+H opens the menu at the pointer.
-- The app has no Dock icon.
+- The app has no Dock icon. Launched at login it starts in the background without opening Settings; launched by hand it opens Settings.
 - The wallpaper pauses for a fullscreen or maximized frontmost window, a fullscreen Space, display sleep or a locked screen, and resumes when they end. It can also be paused from the menu.
 - Settings and logs are stored in `~/Library/Application Support/DesklandPreview`, with `host.log` and `settings.json` there. Shared images and videos go to `~/Pictures/Deskland Preview`.
 - Set `DESKLAND_PROFILE_DIR` to an absolute path to isolate settings, caches and the single-instance lock. Set `DESKLAND_PAGE_DIR` to serve theme pages from another directory.

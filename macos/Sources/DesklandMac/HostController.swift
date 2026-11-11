@@ -47,7 +47,9 @@ final class HostController: NSObject, NSApplicationDelegate, NSMenuDelegate {
             MainActor.assumeIsolated { self?.watch() }
         }
         startWallpaper()
-        if showSettingsOnLaunch { openSettings() }
+        let loginLaunch = Autostart.launchedAsLoginItem()
+        if loginLaunch { Log.write("由登录项启动") }
+        if showSettingsOnLaunch && !loginLaunch { openSettings() }
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
