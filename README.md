@@ -85,6 +85,14 @@ The installer targets the current user's `Programs\Deskland Preview` directory a
 
 [Download Deskland Preview for Windows](https://github.com/BLEZZ0102/Deskland/releases/latest). The installer is unsigned, so Windows SmartScreen may show a warning.
 
+## macOS
+
+Deskland Preview also runs on macOS 15 or later, on the main display, as an AppKit host with the same themes and settings. It reads desktop icon positions through the Accessibility permission. Build, signing, permissions and unsigned-build steps are in [macos/README.md](macos/README.md); Stage Manager is untested and unsupported.
+
+```sh
+task macos:build
+```
+
 ## Project layout
 
 | Path | Contents |
@@ -96,11 +104,13 @@ The installer targets the current user's `Programs\Deskland Preview` directory a
 | `prototype/themes.json` | Full free-theme definitions and locked-theme display metadata |
 | `prototype/share.js` | Privacy-preserving image and animation sharing |
 | `prototype/assets/` | Images used by the included themes |
+| `macos/` | macOS host, Swift package and build tasks |
 | `tools/` | Installer build tooling |
 
 ## Known limitations
 
 - Only the primary monitor is supported.
+- Stage Manager on macOS is untested and unsupported.
 - Windows Spotlight or a wallpaper slideshow can briefly flash when Windows changes the background image.
 - Preview does not include account sign-in, entitlement restoration, automatic updates or the other themes' implementation.
 
@@ -193,6 +203,14 @@ powershell -ExecutionPolicy Bypass -File tools\build-installer.ps1
 
 [下载 Deskland Preview Windows 安装包](https://github.com/BLEZZ0102/Deskland/releases/latest)。安装包未签名，Windows SmartScreen 可能显示提示。
 
+### macOS 版
+
+体验版也可在 macOS 15 或更高版本运行，只覆盖主显示器，使用相同的主题和设置，通过“辅助功能”权限读取桌面图标位置。构建、签名、权限和未签名版本的打开方式见 [macos/README.md](macos/README.md)；Stage Manager 未经测试，不受支持。
+
+```sh
+task macos:build
+```
+
 ### 目录结构
 
 | 路径 | 用途 |
@@ -204,11 +222,13 @@ powershell -ExecutionPolicy Bypass -File tools\build-installer.ps1
 | `prototype/themes.json` | 免费主题完整定义及锁定主题展示信息 |
 | `prototype/share.js` | 隐私保护的图片和动画分享 |
 | `prototype/assets/` | 随附主题图片素材 |
+| `macos/` | macOS 宿主、Swift 包与构建任务 |
 | `tools/` | 安装包构建工具 |
 
 ### 已知限制
 
 - 目前只支持主显示器。
+- macOS 上的 Stage Manager 未经测试，不受支持。
 - 使用 Windows 聚焦或壁纸幻灯片时，系统换图可能造成短暂闪烁。
 - 体验版不包含账号登录、购买恢复、自动更新或其他主题实现。
 
